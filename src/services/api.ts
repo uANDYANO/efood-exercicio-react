@@ -1,6 +1,4 @@
-import { createApi } from '@reduxjs/toolkit/query/react'
-
-import { RESTAURANTS_DATA } from '../data'
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export type Dish = {
   id: number;
@@ -27,7 +25,7 @@ type Product = {
   price: number;
 };
 
-export type PurchasePayload = {
+type PurchasePayload = {
   products: Product[];
   delivery: {
     receiver: string;
@@ -52,64 +50,27 @@ export type PurchasePayload = {
   };
 };
 
-export type PurchaseResponse = {
+type PurchaseResponse = {
   orderId: string;
 };
 
-const customBaseQuery = async (args: { url: string; method?: string; body?: unknown }) => {
-  // Simula um atraso de rede de 500ms
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  // Simula a lógica do backend para diferentes URLs
-  if (args.url === 'restaurantes') {
-    return { data: RESTAURANTS_DATA };
-  }
-
-  // Lógica para buscar um restaurante por ID
-  if (args.url.startsWith('restaurantes/')) {
-    const id = parseInt(args.url.split('/')[1], 10);
-    const restaurant = RESTAURANTS_DATA.find((r) => r.id === id);
-    if (restaurant) {
-      return { data: restaurant };
-    } else {
-      return { error: { status: 404, data: 'Restaurante não encontrado' } };
-    }
-  }
-
-  if (args.url === 'checkout' && args.method === 'POST') {
-    // Simula uma resposta de sucesso para a compra
-    console.log('Dados da compra recebidos (simulação):', args.body);
-    const mockResponse: PurchaseResponse = {
-      orderId: `mock-order-${Date.now()}`
-    };
-    return { data: mockResponse };
-  }
-
-  return { error: { status: 404, data: `Endpoint não encontrado: ${args.url}` } };
-};
-
 const api = createApi({
-  
-  // @ts-ignore - Adicionado para o TypeScript não reclamar da tipagem customizada
-  baseQuery: customBaseQuery,
+  baseQuery: fetchBaseQuery({
+    baseUrl: "https://fake-api-tau.vercel.app/api/efood",
+  }),
   endpoints: (builder) => ({
-    
     getRestaurants: builder.query<Restaurant[], void>({
-      query: () => ({ url: 'restaurantes' }),
-    }),
-    // Endpoint para buscar um restaurante específico
-    getRestaurant: builder.query<Restaurant, string>({
-      query: (id) => ({ url: `restaurantes/${id}` })
+      query: () => "restaurantes",
     }),
     purchase: builder.mutation<PurchaseResponse, PurchasePayload>({
       query: (body) => ({
-        url: 'checkout',
-        method: 'POST',
+        url: "checkout",
+        method: "POST",
         body,
       }),
     }),
   }),
 });
 
-export const { useGetRestaurantsQuery, useGetRestaurantQuery, usePurchaseMutation } = api;
+export const { useGetRestaurantsQuery, usePurchaseMutation } = api;
 export default api;
